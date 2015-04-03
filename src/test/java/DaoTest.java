@@ -38,20 +38,7 @@ public class DaoTest {
 
     }
 
-    @Test
-    public void testMakeNUserDao() throws Exception {
-        UserDao userDao = new UserDao(new NConnectionMaker());
-        userDao.add(nUser);
-
-        User user = userDao.get(nUser.getId());
-
-        assertThat(user.getId(), is(nUser.getId()));
-        assertThat(user.getName(), is(nUser.getName()));
-        assertThat(user.getPassword(), is(nUser.getPassword()));
-
-        userDao.delete(user.getId());
-    }
-
+    
     public class UserDao {
         private ConnectionMaker connectionMaker;
 
