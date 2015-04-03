@@ -2,7 +2,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.sql.*;
-import java.util.Random;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
@@ -11,21 +10,24 @@ import static org.junit.Assert.*;
  */
 public class DaoTest {
     private User user;
+    private User nUser;
+
     @Before
     public void setUser() {
-        user = new User("sleepbear1", "gom", "gom0119!1");
+        user = new User("sleepbear", "gom", "gom0119!1");
+        nUser = new User("n", "gom", "gom0119!!");
     }
 
     @Test(expected = SQLException.class)
     public void testDeleteUser() throws Exception {
-        UserDao userDao = new UserDao();
+        UserDao userDao = new NUserDao();
         userDao.delete(user.getId());
         assertNull(userDao.get(user.getId()));
     }
 
     @Test
     public void testGetAndAddUser() throws Exception {
-        UserDao userDao = new UserDao();
+        UserDao userDao = new NUserDao();
 
         userDao.add(user);
         User userGet = userDao.get(user.getId());
@@ -36,7 +38,21 @@ public class DaoTest {
 
     }
 
-    private class UserDao {
+    @Test
+    public void testMakeNUserDao() throws Exception {
+        UserDao userDao = new NUserDao();
+        userDao.add(nUser);
+
+        User user = userDao.get(nUser.getId());
+
+        assertThat(user.getId(), is(nUser.getId()));
+        assertThat(user.getName(), is(nUser.getName()));
+        assertThat(user.getPassword(), is(nUser.getPassword()));
+
+        userDao.delete(user.getId());
+    }
+
+    public abstract class UserDao {
 
         public User get(String id) throws ClassNotFoundException, SQLException {
             Connection connection = getConnection();
@@ -57,11 +73,6 @@ public class DaoTest {
             return user;
         }
 
-        private Connection getConnection() throws ClassNotFoundException, SQLException {
-            Class.forName("com.mysql.jdbc.Driver");
-            return DriverManager.getConnection("jdbc:mysql://localhost/spring", "root", "gom0119!1");
-        }
-
         public void add(User user) throws ClassNotFoundException, SQLException {
             Connection connection = getConnection();
             PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO users(id, name, password) VALUES (? , ?, ?)");
@@ -76,12 +87,24 @@ public class DaoTest {
 
         public void delete(String id) throws ClassNotFoundException, SQLException {
             Connection connection = getConnection();
+
             PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM users WHERE id = ?");
             preparedStatement.setString(1, id);
             preparedStatement.executeUpdate();
 
             preparedStatement.close();
             connection.close();
+        }
+        public abstract Connection getConnection() throws ClassNotFoundException, SQLException;
+    }
+
+    private class NUserDao extends UserDao {
+
+        @Override
+        public Connection getConnection() throws ClassNotFoundException, SQLException {
+            Class.forName("com.mysql.jdbc.Driver");
+            Connection connection = DriverManager.getConnection("jdbc:mysql://localhost/spring", "root", "gom0119!1");
+            return connection;
         }
     }
 }
