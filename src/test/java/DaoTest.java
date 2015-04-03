@@ -1,3 +1,4 @@
+import org.junit.Before;
 import org.junit.Test;
 
 import java.sql.*;
@@ -9,6 +10,12 @@ import static org.junit.Assert.*;
  * Created by sleepbear on 2015-04-03.
  */
 public class DaoTest {
+    private User user;
+    @Before
+    public void setUser() {
+        user = new User("sleepbear", "gom", "gom0119!1");
+    }
+
     @Test
     public void testGetAndAddUser() throws Exception {
         UserDao userDao = new UserDao();
@@ -30,7 +37,18 @@ public class DaoTest {
 
     }
 
+    @Test(expected = SQLException.class)
+    public void testDeleteUser() throws Exception {
+        UserDao userDao = new UserDao();
+        User user = new User("test1", "gom", "gom0119!1");
+        userDao.add(user);
+        userDao.delete(user.getId());
+
+        assertNull(userDao.get(user.getId()));
+    }
+
     private class UserDao {
+
         public User get(String id) throws ClassNotFoundException, SQLException {
             Class.forName("com.mysql.jdbc.Driver");
             Connection connection = DriverManager.getConnection("jdbc:mysql://localhost/spring", "root", "gom0119!1");
@@ -64,5 +82,15 @@ public class DaoTest {
             connection.close();
         }
 
+        public void delete(String id) throws ClassNotFoundException, SQLException {
+            Class.forName("com.mysql.jdbc.Driver");
+            Connection connection = DriverManager.getConnection("jdbc:mysql://localhost/spring", "root", "gom0119!1");
+            PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM users WHERE id = ?");
+            preparedStatement.setString(1, id);
+            preparedStatement.executeUpdate();
+
+            preparedStatement.close();
+            connection.close();
+        }
     }
 }
